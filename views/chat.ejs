@@ -8,24 +8,44 @@
   <script src="/socket.io/socket.io.js"></script>
 </head>
 <body>
+  <ul id="nicknames">
+  
+  </ul>
   <ul id="messages" >
 
   </ul>
-  <form action="">
-    <input id="messageInput" autocomplete="off"/><button>enviar</button>
+  <form action="" id="form-message">
+    <input id="messageInput" autocomplete="off" data-testid="message-box"/>
+    <button data-testid="send-button">enviar</button>
+  </form>
+
+  <form action="" id="form-nickname">
+    <input id="nicknameInput" autocomplete="off" data-testid="nickname-box"/>
+    <button data-testid="nickname-button" >enviar</button>
   </form>
 
   <script>
     const socket = io();
 
-    const form = document.querySelector('form');
-    const input = document.querySelector('#messageInput')
-    form.addEventListener('submit', (e) => {
+    const formMessage = document.querySelector('#form-message');
+    const inputMessage = document.querySelector('#messageInput')
+    formMessage.addEventListener('submit', (e) => {
       e.preventDefault();
-      const chatMessage = input.value
-      const nickname = 'teste nickname'
+      const chatMessage = inputMessage.value
+      const nickname = sessionStorage.getItem('nickname');
       socket.emit('message', { chatMessage, nickname });
-      input.value = '';
+      inputMessage.value = '';
+      return false
+    })
+
+    const formNickname = document.querySelector('#form-nickname');
+    const inputNickname = document.querySelector('#nicknameInput')
+    formNickname.addEventListener('submit', (e) => {
+      e.preventDefault();
+      const newNickname = inputNickname.value
+      sessionStorage.setItem('nickname', newNickname)
+      inputNickname.value = '';
+      createNicknamesList(newNickname)
       return false
     })
 
@@ -33,9 +53,23 @@
       const messagesUl = document.querySelector('#messages');
       const li = document.createElement('li');
       li.innerText = message;
+      li.setAttribute('data-testid', 'message');
       messagesUl.appendChild(li);
     }
+
+    const createNicknamesList = (nickname) => {
+      const nicknamesUl = document.querySelector('#nicknames');
+      const li = document.createElement('li');
+      li.innerText = nickname;
+      li.setAttribute('data-testid', 'online-user');
+      nicknamesUl.appendChild(li);
+    }
+
     socket.on('message', (message) => createMessage(message))
+
+    socket.on('createNickname', createdNickname => {
+      createNicknamesList(createdNickname)
+    })
   </script>
 
 </body>

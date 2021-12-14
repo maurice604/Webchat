@@ -23,13 +23,15 @@ app.use(bodyParser.json());
 const PORT = process.env.PORT || 3000;
 
 io.on('connection', (socket) => {
-    console.log('Usuário conectado!');
+   const id = socket.id.slice(0, 16);
+   io.emit('createNickname', id);
+    console.log(`Usuário conectado ${id}!`);
+    
     const date = moment().format('DD-MM-yyyy HH:mm:ss A');
 
     socket.on('message', ({ nickname, chatMessage }) => {
       io.emit('message', `${date} - ${nickname}: ${chatMessage}`);
     });
-
     socket.on('disconnect', () => {
       console.log('Desconectou!');
     });

@@ -8,9 +8,6 @@
   <script src="/socket.io/socket.io.js"></script>
 </head>
 <body>
-  <ul id="nicknames">
-  
-  </ul>
   <ul id="messages" >
 
   </ul>
@@ -24,30 +21,28 @@
     <button data-testid="nickname-button" >enviar</button>
   </form>
 
+  <ul id="online-users">
+  
+  </ul>
+
   <script>
     const socket = io();
 
     const formMessage = document.querySelector('#form-message');
-    const inputMessage = document.querySelector('#messageInput')
+    const inputMessage = document.querySelector('#messageInput');
+
     formMessage.addEventListener('submit', (e) => {
       e.preventDefault();
       const chatMessage = inputMessage.value
       const nickname = sessionStorage.getItem('nickname');
       socket.emit('message', { chatMessage, nickname });
       inputMessage.value = '';
-      return false
+      return false;
     })
 
     const formNickname = document.querySelector('#form-nickname');
     const inputNickname = document.querySelector('#nicknameInput')
-    formNickname.addEventListener('submit', (e) => {
-      e.preventDefault();
-      const newNickname = inputNickname.value
-      sessionStorage.setItem('nickname', newNickname)
-      inputNickname.value = '';
-      createNicknamesList(newNickname)
-      return false
-    })
+
 
     const createMessage = (message) => {
       const messagesUl = document.querySelector('#messages');
@@ -57,18 +52,35 @@
       messagesUl.appendChild(li);
     }
 
+    formNickname.addEventListener('submit', (e) => {
+      e.preventDefault();
+      const newNickname = inputNickname.value;
+      if (newNickname !== '') {
+        socket.emit('newName', newNickname);
+      }
+      sessionStorage.setItem('nickname', newNickname)
+      inputNickname.value = '';
+      return false;
+    })
+
     const createNicknamesList = (nickname) => {
-      const nicknamesUl = document.querySelector('#nicknames');
+      const nicknamesUl = document.getElementById('online-users');
+      const socketNick = socket.id.slice(0, 16);
+      nicknamesUl.innerHTML = '';
+      nickname.forEach((user) => {
+      console.log('TESTE_NAME', nickname, user)
       const li = document.createElement('li');
-      li.innerText = nickname;
       li.setAttribute('data-testid', 'online-user');
+      li.innerText = user;
+      user === socketNick || user === '' ? nicknamesUl.prepend(li) :
       nicknamesUl.appendChild(li);
-    }
+      });
+    };
 
-    socket.on('message', (message) => createMessage(message))
+    socket.on('message', (message) => createMessage(message));
 
-    socket.on('createNickname', createdNickname => {
-      createNicknamesList(createdNickname)
+    socket.on('onlineUsersList', createdNickname => {
+      createNicknamesList(createdNickname);
     })
   </script>
 

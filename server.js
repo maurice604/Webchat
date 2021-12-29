@@ -3,33 +3,32 @@ const http = require('http').createServer(app);
 const cors = require('cors');
 const moment = require('moment');
 const path = require('path');
-// const bodyParser = require('body-parser');
 
 app.set('view engine', 'ejs');
 app.set('views', path.join(__dirname, 'views'));
 
 const io = require('socket.io')(http, {
   cors: {
-    origin: `http://localhost:${3000}`,
+    origin: 'http://localhost:3000',
     methods: ['POST', 'GET'],
   },
 });
 
+const { getAll, create } = require('./models/chatModel');
+
 app.use(cors());
-// app.use(bodyParser.json());
-// app.use(bodyParser.urlencoded({ extended: true }));
 
 const PORT = process.env.PORT || 3000;
 
 const onUsers = {};
 const date = moment().format('DD-MM-yyyy HH:mm:ss A');
 
-io.on('connection', (socket) => {
+io.on('connection', async (socket) => {
    onUsers[socket.id] = socket.id.slice(0, 16);
-    console.log(`Usuário conectado ${Object.values(onUsers)}!`);
 
-  socket.on('message', ({ nickname, chatMessage }) => {
+   socket.on('message', async ({ nickname, chatMessage }) => {
       io.emit('message', `${date} - ${nickname}: ${chatMessage}`);
+      await create({ chatMessage, nickname, date });
     });
 
     socket.on('newName', (nickname) => {
@@ -40,8 +39,13 @@ io.on('connection', (socket) => {
     socket.on('disconnect', () => {
       delete onUsers[socket.id];
       io.emit('onlineUsersList', Object.values(onUsers));
-      console.log('Desconectou!');
     });
+
+    const messagesHistory = async () => {
+      const messages = await getAll(); return messages;
+    };
+    io.emit('messagesHistory', await messagesHistory());
+    
     io.emit('onlineUsersList', Object.values(onUsers));
 });
 

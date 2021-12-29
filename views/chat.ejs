@@ -52,6 +52,16 @@
       messagesUl.appendChild(li);
     }
 
+    function getMessagesHistory(allMessages) {
+  allMessages.forEach(({ date, nickname, chatMessage }) => {
+    const msg = document.getElementById('messages');
+    const li = document.createElement('li');
+    li.innerText = `${date} - ${nickname} : ${chatMessage}`;
+    li.setAttribute('data-testid', 'message');
+    msg.appendChild(li);
+  });
+}
+
     formNickname.addEventListener('submit', (e) => {
       e.preventDefault();
       const newNickname = inputNickname.value;
@@ -76,6 +86,8 @@
       nicknamesUl.appendChild(li);
       });
     };
+
+    socket.on('messagesHistory', (allMessages) => getMessagesHistory(allMessages));
 
     socket.on('message', (message) => createMessage(message));
 

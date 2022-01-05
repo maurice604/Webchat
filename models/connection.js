@@ -16,5 +16,4 @@ async function connection() {
       return schema;
     });
 }
-
 module.exports = connection;
